@@ -110,7 +110,7 @@ def get_valid_groups():
     all_groups = SubjectGroup.query.all()
     valid_groups = []
 
-    # 3. Thuật toán lọc: Khối nào có TẤT CẢ các môn nằm trong rổ môn của user thì được chọn
+    # 3. Thuật toán lọc: Khối nào có tất cả các môn nằm trong rổ môn của user thì được chọn
     for group in all_groups:
         group_subject_ids = [subject.id for subject in group.subjects]
         if group_subject_ids and all(sub_id in user_subject_ids for sub_id in group_subject_ids):
