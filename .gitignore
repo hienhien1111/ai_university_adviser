@@ -1,0 +1,12 @@
+# Bỏ qua môi trường ảo (Thủ phạm làm project nặng > 200MB)
+venv/
+
+# Bỏ qua file chứa thông tin bảo mật (Mật khẩu DB, API Key)
+.env
+
+# Bỏ qua các file cache và biên dịch của Python
+__pycache__/
+*.pyc
+
+# Bỏ qua file hệ thống rác của hệ điều hành macOS sinh ra
+.DS_Store
