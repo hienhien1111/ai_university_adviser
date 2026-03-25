@@ -1,11 +1,11 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
-from flask import request
 from ai_service import analyze_personality_and_suggest
 from sqlalchemy.dialects.postgresql import JSONB # Cần thiết cho cột special_conditions
 from flask_cors import CORS
+from sqlalchemy import or_, and_
 
 # Tải các biến môi trường từ file .env
 load_dotenv()
@@ -47,7 +47,10 @@ class Major(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ministry_code = db.Column(db.String(20), unique=True)
     name = db.Column(db.String(255), nullable=False)
-    ai_mapping_group = db.Column(db.String(100), index=True)
+    
+    # Đã cập nhật cho khớp với Database mới (thay thế ai_mapping_group)
+    group_code = db.Column(db.String(20), index=True)
+    group_name = db.Column(db.String(255))
     
     university_majors = db.relationship('UniversityMajor', backref='major', lazy=True)
 
@@ -94,23 +97,19 @@ class AdmissionScore(db.Model):
 
 
 # ==========================================
-# API LỌC KHỐI THI HỢP LỆ
+# API 1: LỌC KHỐI THI HỢP LỆ
 # ==========================================
 @app.route('/api/get-valid-groups', methods=['POST'])
 def get_valid_groups():
-    # 1. Lấy dữ liệu người dùng gửi lên (VD: mảng ID của 4 môn học)
     data = request.get_json()
     
     if not data or 'subject_ids' not in data:
         return jsonify({"status": "error", "message": "Vui lòng cung cấp mảng subject_ids"}), 400
         
     user_subject_ids = data['subject_ids']
-
-    # 2. Truy vấn toàn bộ khối thi hiện có trong Database
     all_groups = SubjectGroup.query.all()
     valid_groups = []
 
-    # 3. Thuật toán lọc: Khối nào có tất cả các môn nằm trong rổ môn của user thì được chọn
     for group in all_groups:
         group_subject_ids = [subject.id for subject in group.subjects]
         if group_subject_ids and all(sub_id in user_subject_ids for sub_id in group_subject_ids):
@@ -120,7 +119,6 @@ def get_valid_groups():
                 "description": group.description
             })
 
-    # 4. Trả kết quả về cho Frontend
     return jsonify({
         "status": "success",
         "provided_subject_ids": user_subject_ids,
@@ -128,7 +126,7 @@ def get_valid_groups():
     })
 
 # ==========================================
-# API PHÂN TÍCH TÍNH CÁCH & GỢI Ý NGÀNH
+# API 2: PHÂN TÍCH TÍNH CÁCH & GỢI Ý NGÀNH
 # ==========================================
 @app.route('/api/analyze-personality', methods=['POST'])
 def analyze_personality():
@@ -137,26 +135,103 @@ def analyze_personality():
     if not data:
         return jsonify({"status": "error", "message": "Thiếu dữ liệu đầu vào"}), 400
 
-    # 1. Truy vấn Database lấy toàn bộ tên ngành hiện có
     majors_query = Major.query.with_entities(Major.name).all()
     available_majors = [major[0] for major in majors_query]
     
-    # Xử lý trường hợp DB rỗng (chưa nhập dữ liệu)
     if not available_majors:
-        return jsonify({"status": "error", "message": "Database chưa có dữ liệu ngành học. Vui lòng thêm dữ liệu vào bảng Majors."}), 400
+        return jsonify({"status": "error", "message": "Database chưa có dữ liệu ngành học."}), 400
 
-    # 2. Gọi AI Agent và truyền cả 2 luồng dữ liệu vào
     ai_response = analyze_personality_and_suggest(data, available_majors)
     
     if "error" in ai_response:
         return jsonify({"status": "error", "message": ai_response["error"]}), 500
 
-    # 3. Trả kết quả về cho Frontend
     return jsonify({
         "status": "success",
         "data": ai_response
     })
+
+# ==========================================
+# API 3: TRÙM CUỐI - TÌM TRƯỜNG ĐẠI HỌC
+# ==========================================
+@app.route('/api/find-universities', methods=['POST'])
+def find_universities():
+    data = request.json
     
+    # Nhận dữ liệu
+    ai_suggested_majors = data.get('ai_majors', []) 
+    region = data.get('region', 'ALL')              
+    user_groups = data.get('user_groups', [])       # Format: [{"group_id": 1, "score": 25.5}, ...]
+    
+    if not ai_suggested_majors or not user_groups:
+        return jsonify({"status": "error", "message": "Thiếu thông tin ngành học hoặc điểm số khối thi!"})
+
+    try:
+        # Xây dựng truy vấn JOIN 5 bảng
+        query = db.session.query(
+            University.name.label('uni_name'),
+            University.code.label('uni_code'),
+            Major.name.label('major_name'),
+            SubjectGroup.code.label('group_code'),
+            AdmissionScore.year,
+            AdmissionScore.base_score,
+            UniversityMajor.admission_code
+        ).join(UniversityMajor, University.id == UniversityMajor.university_id)\
+         .join(Major, Major.id == UniversityMajor.major_id)\
+         .join(AdmissionScore, AdmissionScore.university_major_id == UniversityMajor.id)\
+         .join(SubjectGroup, SubjectGroup.id == AdmissionScore.subject_group_id)
+
+        # Điều kiện 1A: Ngành học phải nằm trong list AI gợi ý
+        query = query.filter(Major.name.in_(ai_suggested_majors))
+        
+        # Điều kiện 1B: Lọc Khu vực
+        if region != 'ALL':
+            query = query.filter(University.region == region)
+
+        # Điều kiện 2 & 3: Khớp Khối thi và Điểm số
+        score_conditions = []
+        for group in user_groups:
+            group_id = group.get('group_id')
+            user_score = group.get('score')
+            
+            # Khối phải đúng ID VÀ Điểm chuẩn DB phải <= Điểm User
+            condition = and_(
+                AdmissionScore.subject_group_id == group_id,
+                AdmissionScore.base_score <= user_score
+            )
+            score_conditions.append(condition)
+            
+        if score_conditions:
+            query = query.filter(or_(*score_conditions))
+
+        # Ưu tiên lấy điểm năm mới nhất, xếp điểm từ cao xuống thấp
+        query = query.order_by(AdmissionScore.year.desc(), AdmissionScore.base_score.desc())
+        
+        results = query.all()
+        
+        # Format dữ liệu trả về
+        matched_universities = []
+        for r in results:
+            matched_universities.append({
+                "university_name": r.uni_name,
+                "university_code": r.uni_code,
+                "major_name": r.major_name,
+                "admission_code": r.admission_code,
+                "subject_group": r.group_code,
+                "required_score": float(r.base_score),
+                "year": r.year
+            })
+        
+        return jsonify({
+            "status": "success",
+            "count": len(matched_universities),
+            "data": matched_universities
+        })
+
+    except Exception as e:
+        print(f"Lỗi truy vấn Database: {e}")
+        return jsonify({"status": "error", "message": "Lỗi hệ thống khi tìm kiếm trường Đại học."})
+
 # ==========================================
 # API TEST 
 # ==========================================
