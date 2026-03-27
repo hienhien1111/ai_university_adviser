@@ -37,7 +37,7 @@ function App() {
   const [aiError, setAiError] = useState('')
   const [uniError, setUniError] = useState('')
 
-  const API_BASE = "http://127.0.0.1:5000/api"
+  const API_BASE = "https://xettuyen.site/api"
 
   // 1. Quản lý thay đổi môn học & Gọi API lấy khối thi
   useEffect(() => {
