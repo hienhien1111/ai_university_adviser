@@ -185,8 +185,11 @@ def find_universities():
         query = query.filter(Major.name.in_(ai_suggested_majors))
         
         # Điều kiện 1B: Lọc Khu vực
-        if region != 'ALL':
-            query = query.filter(University.region == region)
+        # Đề phòng Frontend gửi 'Toàn Quốc' thay vì 'ALL'
+        if region and region not in ['ALL', 'Toàn Quốc', '']:
+            # Dùng ilike để tìm kiếm không phân biệt hoa thường và chứa từ khóa
+            # Ví dụ: region='Bắc' sẽ khớp với 'Bắc', 'Miền Bắc', 'Bắc '
+            query = query.filter(University.region.ilike(f"%{region}%"))
 
         # Điều kiện 2 & 3: Khớp Khối thi và Điểm số
         score_conditions = []
