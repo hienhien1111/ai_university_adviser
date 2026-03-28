@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 
-//force redeploy
 const SUBJECT_LIST = [
   { id: 1, name: 'Toán', isCompulsory: true },
   { id: 2, name: 'Ngữ Văn', isCompulsory: true },
@@ -29,6 +28,7 @@ function App() {
   const [aiResult, setAiResult] = useState(null)
   const [universitiesResult, setUniversitiesResult] = useState(null)
   const [showUniPrompt, setShowUniPrompt] = useState(false) // Trạng thái hỏi có muốn xem trường không
+  const [showRegionPrompt, setShowRegionPrompt] = useState(false)
 
   const [isLoadingGroups, setIsLoadingGroups] = useState(false)
   const [isLoadingAi, setIsLoadingAi] = useState(false)
@@ -38,7 +38,11 @@ function App() {
   const [aiError, setAiError] = useState('')
   const [uniError, setUniError] = useState('')
 
+  // API_BASE
   const API_BASE = "https://api.xettuyen.site/api"
+
+  // Local
+  // const API_BASE = "http://127.0.0.1:5000/api"
 
   // 1. Quản lý thay đổi môn học & Gọi API lấy khối thi
   useEffect(() => {
@@ -134,6 +138,7 @@ function App() {
     setAiResult(null)
     setUniversitiesResult(null)
     setShowUniPrompt(false)
+    setShowRegionPrompt(false)
     setIsLoadingAi(true)
 
     const payload = { hoat_dong: hoatDong, tinh_cach: tinhCach, nang_luc: nangLuc, moi_truong: moiTruong }
@@ -163,9 +168,9 @@ function App() {
   // ==========================================
   // BƯỚC 2: GỌI API TÌM TRƯỜNG ĐẠI HỌC
   // ==========================================
-  const handleFindUniversities = async () => {
+  const handleFindUniversities = async (selectedRegion) => {
     setUniError('')
-    setUniversitiesResult(null)
+    setRegion(selectedRegion)
 
     // Kiểm tra điểm số
     if (!validGroups || validGroups.length === 0) {
@@ -191,7 +196,7 @@ function App() {
 
     const uniPayload = {
       ai_majors: aiResult.suggested_majors,
-      region: region,
+      region: selectedRegion,
       user_groups: userGroupsPayload
     }
 
@@ -253,14 +258,18 @@ function App() {
   const renderScoreInputs = () => {
     const activeSubjects = SUBJECT_LIST.filter(s => s.id === 1 || s.id === 2 || optionalSubjects.includes(s.id));
     return activeSubjects.map(sub => (
-      <div key={sub.id} className="col-span-1">
-        <label className="block mb-1 text-xs font-semibold text-slate-500">{sub.name}</label>
+      // Thêm flex, flex-col và justify-end để căn đáy
+      <div key={sub.id} className="col-span-1 flex flex-col justify-end h-full">
+        {/* Thêm text-center và truncate để chữ quá dài sẽ hiện dấu ... thay vì rớt dòng */}
+        <label className="block mb-1 text-xs font-semibold text-slate-500 text-center truncate" title={sub.name}>
+          {sub.name}
+        </label>
         <input
           type="number" step="0.25" min="0" max="10"
           value={subjectScores[sub.id] || ''}
           onChange={(e) => handleScoreChange(sub.id, e.target.value)}
           placeholder="0.0"
-          className="w-full bg-white border border-slate-200 text-indigo-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none block p-2 transition-all text-center font-bold shadow-inner"
+          className="w-full bg-white border border-slate-200 text-indigo-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none block p-2 transition-all text-center font-bold shadow-inner mt-auto"
         />
       </div>
     ));
@@ -321,24 +330,12 @@ function App() {
 
               <div className="pt-4 border-t border-slate-200">
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  <div className="md:col-span-3">
+                  <div className="col-span-full">
                     <label className="block mb-3 text-sm font-semibold text-slate-700">Điểm thi từng môn</label>
-                    <div className="grid grid-cols-4 gap-2 bg-slate-100 p-2.5 rounded-xl border border-slate-200">
+                    {/* Chỉnh lại grid để các ô điểm dàn đều ra */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 bg-slate-100 p-3 rounded-xl border border-slate-200">
                       {renderScoreInputs()}
                     </div>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block mb-3 text-sm font-semibold text-slate-700">Khu vực ưu tiên</label>
-                    <select
-                      value={region}
-                      onChange={(e) => setRegion(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-medium rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none block p-3 transition-all h-[68px]"
-                    >
-                      <option value="ALL">📍 Toàn quốc</option>
-                      <option value="NORTH">Miền Bắc</option>
-                      <option value="CENTRAL">Miền Trung</option>
-                      <option value="SOUTH">Miền Nam</option>
-                    </select>
                   </div>
                 </div>
               </div>
@@ -350,7 +347,7 @@ function App() {
                 <div className="bg-cyan-100 p-2 rounded-lg mr-3">
                   <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
                 </div>
-                <h2 className="text-xl font-bold text-slate-800">2. Bản Đồ Tâm Lý</h2>
+                <h2 className="text-xl font-bold text-slate-800">2. Hồ Sơ Tính Cách</h2>
               </div>
 
               <div className="space-y-4">
@@ -399,15 +396,21 @@ function App() {
                   {!groupError && !validGroups && <span className="text-slate-400 text-sm italic">Chọn ít nhất 1 môn tự chọn để xem khối thi.</span>}
 
                   {validGroups && validGroups.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3">
                       {validGroups.map(g => {
                         const { total, isComplete } = calculateGroupScore(g.description);
                         return (
-                          <div key={g.id} className="bg-white border border-indigo-100 px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2">
-                            <span className="font-extrabold text-indigo-700">{g.code}</span>
-                            <span className="text-slate-300">|</span>
-                            <span className={`font-black ${isComplete ? 'text-emerald-600' : 'text-amber-500'}`}>
-                              {total > 0 ? total : '--'}
+                          <div key={g.id} className="bg-white border border-indigo-100 px-3 py-2 rounded-lg shadow-sm flex flex-col min-w-[140px] hover:border-indigo-300 transition-colors">
+                            {/* Dòng trên: Tên khối & Điểm */}
+                            <div className="flex justify-between items-center mb-1 border-b border-slate-100 pb-1">
+                              <span className="font-extrabold text-indigo-700">{g.code}</span>
+                              <span className={`font-black ${isComplete ? 'text-emerald-600' : 'text-amber-500'}`}>
+                                {total > 0 ? `${total}Đ` : '--'}
+                              </span>
+                            </div>
+                            {/* Dòng dưới: Chi tiết các môn học */}
+                            <span className="text-xs text-slate-500 font-medium tracking-tight">
+                              {g.description}
                             </span>
                           </div>
                         )
@@ -434,7 +437,7 @@ function App() {
                   <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl p-5 border border-cyan-100">
                     <h3 className="text-sm uppercase tracking-wider font-bold text-cyan-600 mb-4 flex items-center">
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                      Định vị Bản thân
+                      Góc Nhìn Từ Trợ Lý AI
                     </h3>
                     <div className="mb-4">
                       <div className="flex flex-wrap gap-2 mb-3">
@@ -456,20 +459,39 @@ function App() {
                     </div>
                   </div>
 
-                  {/* Nút bấm hỏi ý kiến tìm trường */}
-                  {showUniPrompt && !universitiesResult && !isLoadingUni && (
+                  {/* Nút 1: Lời kêu gọi khám phá (Chỉ hiện khi chưa ấn) */}
+                  {showUniPrompt && !showRegionPrompt && !universitiesResult && !isLoadingUni && (
                     <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6 text-center shadow-inner">
                       <h3 className="font-bold text-indigo-900 text-lg mb-2">Bạn đã tìm được ngành học phù hợp!</h3>
                       <p className="text-indigo-700 text-sm mb-5">Bạn có muốn xem danh sách các trường Đại học đang xét tuyển những ngành này và phù hợp với số điểm của bạn không?</p>
-
                       {uniError && <p className="text-red-500 text-sm mb-4 font-medium bg-red-50 py-2 rounded-lg">{uniError}</p>}
-
                       <button
-                        onClick={handleFindUniversities}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+                        onClick={() => setShowRegionPrompt(true)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all transform hover:-translate-y-1"
                       >
                         Khám Phá Trường Đại Học Ngay
                       </button>
+                    </div>
+                  )}
+
+                  {/* Nút 2: Chọn Khu vực (Hiện ra sau khi ấn nút 1) */}
+                  {showRegionPrompt && !universitiesResult && !isLoadingUni && (
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6 text-center shadow-inner animate-fade-in-up">
+                      <h3 className="font-bold text-indigo-900 text-lg mb-4 flex justify-center items-center">
+                        <span className="text-2xl mr-2">📍</span> Bạn muốn học Đại học ở khu vực nào?
+                      </h3>
+                      {uniError && <p className="text-red-500 text-sm mb-4 font-medium bg-red-50 py-2 rounded-lg">{uniError}</p>}
+                      <div className="flex flex-wrap justify-center gap-3">
+                        {['ALL', 'Bắc', 'Trung', 'Nam'].map(r => (
+                          <button
+                            key={r}
+                            onClick={() => handleFindUniversities(r)}
+                            className="bg-white hover:bg-indigo-600 text-indigo-600 hover:text-white border border-indigo-200 font-bold py-2.5 px-6 rounded-xl shadow-sm hover:shadow-md transition-colors"
+                          >
+                            {r === 'ALL' ? 'Toàn Quốc' : `Miền ${r}`}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -484,10 +506,28 @@ function App() {
                   {/* KHU VỰC 3: DANH SÁCH TRƯỜNG ĐÃ ĐƯỢC GOM NHÓM */}
                   {universitiesResult && (
                     <div className="animate-fade-in-up">
-                      <h3 className="text-sm uppercase tracking-wider font-bold text-indigo-600 mb-4 flex items-center border-b border-indigo-100 pb-2">
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                        Trường Đại Học Đề Xuất
-                      </h3>
+                      <div className="flex flex-col md:flex-row justify-between items-center mb-4 border-b border-indigo-100 pb-4 gap-4">
+                        <h3 className="text-sm uppercase tracking-wider font-bold text-indigo-600 flex items-center shrink-0">
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                          Trường Đại Học Đề Xuất
+                        </h3>
+
+                        {/* THANH TAB LỌC KHU VỰC CỐ ĐỊNH */}
+                        <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner overflow-x-auto w-full md:w-auto">
+                          {['ALL', 'Bắc', 'Trung', 'Nam'].map(r => (
+                            <button
+                              key={r}
+                              onClick={() => handleFindUniversities(r)}
+                              className={`flex-1 md:flex-none whitespace-nowrap px-4 py-1.5 text-sm font-bold rounded-lg transition-all ${region === r
+                                ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
+                                : 'text-slate-500 hover:text-indigo-500 hover:bg-slate-200/50'
+                                }`}
+                            >
+                              {r === 'ALL' ? 'Toàn Quốc' : `Miền ${r}`}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
 
                       {Object.keys(groupedUniversities).length === 0 ? (
                         <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center">
@@ -549,6 +589,16 @@ function App() {
             </div>
           </div>
         </div>
+
+        {/* THÊM FOOTER Ở ĐÂY */}
+        <footer className="mt-16 pt-8 pb-4 border-t border-slate-200 text-center">
+          <p className="text-slate-500 text-sm font-semibold tracking-wide">
+            © 2026 AI Career Navigator. Hệ thống định hướng nghề nghiệp thông minh.
+          </p>
+          <p className="text-slate-400 text-xs mt-2">
+            Phát triển bởi [Tô Minh Hiến - Nguyễn Thành Duy - Bùi Tuệ Mẫn] • Dữ liệu tuyển sinh tham khảo từ Bộ GD&ĐT
+          </p>
+        </footer>
       </div>
     </div>
   )
