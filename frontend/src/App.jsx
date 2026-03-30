@@ -39,10 +39,10 @@ function App() {
   const [uniError, setUniError] = useState('')
 
   // API_BASE
-  const API_BASE = "https://api.xettuyen.site/api"
+  // const API_BASE = "https://api.xettuyen.site/api"
 
   // Local
-  // const API_BASE = "http://127.0.0.1:5000/api"
+  const API_BASE = "http://127.0.0.1:5000/api"
 
   // 1. Quản lý thay đổi môn học & Gọi API lấy khối thi
   useEffect(() => {
@@ -445,7 +445,7 @@ function App() {
                           <span key={idx} className="bg-white border border-cyan-200 text-cyan-700 px-3 py-1 rounded-full text-xs font-bold shadow-sm">{t}</span>
                         ))}
                       </div>
-                      <p className="text-slate-700 leading-relaxed text-sm text-justify mb-4">{aiResult.analysis}</p>
+                      <p className="text-slate-700 leading-relaxed text-sm text-justify whitespace-pre-line mb-4">{aiResult.analysis}</p>
 
                       <h4 className="font-bold text-sm text-slate-800 mb-2">Đề xuất ngành học phù hợp:</h4>
                       <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
