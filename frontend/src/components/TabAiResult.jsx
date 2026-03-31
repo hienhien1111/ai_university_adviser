@@ -1,10 +1,110 @@
-import React from 'react';
-import { Target, Sparkles, AlertCircle, ArrowRight, BookMarked, BarChart3, Compass, School, Fingerprint } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Target, Sparkles, AlertCircle, ArrowRight, BookMarked, BarChart3, Compass, School, Fingerprint, Bot, Loader2 } from 'lucide-react';
+
+// === COMPONENT ROBOT ĐANG CHẠY VÀ SUY NGHĨ ===
+const RobotLoadingState = () => {
+  const messages = [
+    "🤔 Đang phân tích hồ sơ... Hmm, thú vị đấy!",
+    "💻 Đang đối chiếu với kho dữ liệu điểm chuẩn...",
+    "🔍 Phân tích Holland & năng lực đang chạy...",
+    "✨ Gần xong rồi! Đang chốt kết quả nha...",
+    "🎉 Hoàn tất! Sẵn sàng hiển thị..."
+  ];
+  const [msgIndex, setMsgIndex] = useState(0);
+
+  useEffect(() => {
+    // Tự động chuyển đổi câu thoại dựa trên thời gian (Tổng chờ ~12-15s)
+    const timer1 = setTimeout(() => setMsgIndex(1), 3000);
+    const timer2 = setTimeout(() => setMsgIndex(2), 6000);
+    const timer3 = setTimeout(() => setMsgIndex(3), 9000);
+    const timer4 = setTimeout(() => setMsgIndex(4), 12000);
+
+    return () => {
+      clearTimeout(timer1); clearTimeout(timer2);
+      clearTimeout(timer3); clearTimeout(timer4);
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col justify-center items-center py-24 bg-white/40 dark:bg-slate-900/70 backdrop-blur-xl border border-white/60 dark:border-slate-700/80 rounded-[2.5rem] transition-colors relative overflow-hidden shadow-sm min-h-[400px]">
+      
+      {/* Hiệu ứng ánh sáng nền hắt lên */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-cyan-400/20 dark:bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div className="relative z-10 w-full max-w-2xl mx-auto flex flex-col items-center">
+        
+        {/* Không gian đường ray cho robot chạy */}
+        <div className="relative w-full max-w-md h-1 bg-slate-200/50 dark:bg-slate-700/50 rounded-full mt-28 mb-12">
+          
+          {/* Khối bọc cả Robot và Hộp thoại - Chạy qua chạy lại (Trái -> Phải -> Trái) */}
+          <motion.div
+            animate={{ 
+              x: ['-50%', '50%', '-50%'], // Tọa độ di chuyển ngang
+            }}
+            transition={{ 
+              repeat: Infinity, 
+              duration: 5, // Mất 5s để chạy hết 1 vòng
+              ease: "linear"
+            }}
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center w-72"
+          >
+            
+            {/* Hộp thoại Speech Bubble (Nằm trong khối di chuyển nên sẽ bám theo Robot) */}
+            <div className="relative mb-4 bg-white dark:bg-slate-800 px-5 py-3 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 text-center min-h-[60px] flex items-center justify-center w-[260px]">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={msgIndex}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-sm font-bold text-slate-700 dark:text-slate-200"
+                >
+                  {messages[msgIndex]}
+                </motion.p>
+              </AnimatePresence>
+              {/* Mũi tên hộp thoại trỏ xuống */}
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-slate-800 rotate-45 border-b border-r border-slate-100 dark:border-slate-700"></div>
+            </div>
+
+            {/* Bản thân con Robot (Có hiệu ứng nhún nhảy liên tục tạo cảm giác đang chạy) */}
+            <motion.div
+              animate={{ y: [0, -12, 0] }} // Nhún lên xuống
+              transition={{ repeat: Infinity, duration: 0.4, ease: "easeInOut" }}
+              className="relative"
+            >
+              {/* Vệt gió (Speed lines) bay phía sau tạo cảm giác tốc độ */}
+              <motion.div 
+                animate={{ opacity: [0, 1, 0], x: [-5, -20, -5] }}
+                transition={{ repeat: Infinity, duration: 0.6 }}
+                className="absolute top-1/2 -translate-y-1/2 right-full mr-2 flex flex-col gap-1.5 opacity-60"
+              >
+                <div className="w-6 h-1 bg-cyan-400 rounded-full"></div>
+                <div className="w-3 h-1 bg-indigo-400 rounded-full ml-auto"></div>
+              </motion.div>
+
+              {/* Avatar Robot */}
+              <div className="bg-gradient-to-br from-indigo-500 to-cyan-500 p-4 rounded-2xl shadow-xl border-2 border-white/40 relative z-10">
+                <Bot className="w-10 h-10 text-white" />
+              </div>
+            </motion.div>
+
+          </motion.div>
+        </div>
+        
+        {/* Dòng chữ chờ đợi bên dưới đường ray */}
+        <span className="text-slate-500 dark:text-slate-400 font-black animate-pulse text-lg tracking-tight">
+          Hệ thống đang mô phỏng dữ liệu và phân tích...
+        </span>
+      </div>
+    </div>
+  );
+};
 
 export default function TabAiResult({
   isLoadingAi, aiError, aiResult, onGoToUniversity, isDarkMode,
   SUBJECT_LIST = [], optionalSubjects = [], subjectScores = {},
-  // THÊM 2 PROPS MỚI ĐỂ NHẬN DỮ LIỆU TÍNH ĐIỂM
   validGroups = [], calculateGroupScore = () => ({ total: 0, isComplete: false })
 }) {
 
@@ -26,12 +126,11 @@ export default function TabAiResult({
     return JSON.stringify(aiResult.analysis);
   };
 
-  // LOGIC XỬ LÝ: Tính toán và lọc các khối có đủ điểm
   const completedGroups = validGroups ? validGroups
     .map(group => ({
-      name: group.id, // Ví dụ: A00, A01, D01...
-      subjects: group.description, // Ví dụ: Toán, Vật lí, Hóa học
-      ...calculateGroupScore(group.description) // Trả về { total: 24.5, isComplete: true }
+      name: group.id,
+      subjects: group.description, 
+      ...calculateGroupScore(group.description) 
     }))
     .filter(g => g.isComplete) : [];
 
@@ -49,20 +148,17 @@ export default function TabAiResult({
   return (
     <div className="space-y-8 text-left animate-fade-in-up">
 
-      {/* KHỐI TÓM TẮT THÔNG TIN NGƯỜI DÙNG ĐÃ NHẬP (ĐÃ CHỈNH SỬA) */}
       <div className="bg-white/40 dark:bg-slate-900/70 backdrop-blur-xl border border-white/60 dark:border-slate-700/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl p-6 md:p-8 transition-colors duration-500">
         <div className="flex items-center justify-between mb-5 border-b border-slate-200/50 dark:border-slate-700/50 pb-5">
           <h3 className="text-sm uppercase tracking-widest font-black text-indigo-600 dark:text-indigo-400 flex items-center">
              <Fingerprint className="w-5 h-5 mr-2" />Tóm tắt Khối Xét tuyển
           </h3>
         </div>
-      
-      {completedGroups.length > 0 ? (
+        
+        {completedGroups.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {completedGroups.map((group, index) => {
-              // Vẫn giữ tính phần trăm để vẽ độ dài thanh tiến trình
               const percentage = Math.min((group.total / 30) * 100, 100);
-              
               return (
                 <div 
                   key={index} 
@@ -88,7 +184,6 @@ export default function TabAiResult({
                     </div>
                   </div>
 
-                  {/* Thanh tiến trình: Đã sửa nhãn và hiển thị trên thang 30 */}
                   <div className="relative z-10 w-full pt-4 border-t border-slate-100 dark:border-slate-700/80">
                     <div className="flex justify-between items-end mb-2">
                       <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Thang điểm 30</span>
@@ -118,18 +213,8 @@ export default function TabAiResult({
 
       {aiError && <div className="bg-red-50/80 dark:bg-red-950/80 backdrop-blur-md border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 p-5 rounded-2xl font-bold flex items-center shadow-sm"><AlertCircle className="w-5 h-5 mr-3"/>Lỗi truy xuất AI: {aiError}</div>}
       
-      {isLoadingAi && (
-        <div className="flex flex-col justify-center items-center py-24 bg-white/40 dark:bg-slate-900/70 backdrop-blur-xl border border-white/60 dark:border-slate-700/80 rounded-[2.5rem] transition-colors">
-          <div className="relative w-20 h-20 mb-8">
-            <div className="absolute inset-0 bg-cyan-400 dark:bg-cyan-600 rounded-full animate-ping opacity-20"></div>
-            <div className="absolute inset-2 bg-gradient-to-tr from-cyan-500 via-blue-500 to-indigo-500 animate-text-gradient animate-spin-slow rounded-full"></div>
-            <div className="absolute inset-3.5 bg-white dark:bg-slate-800 transition-colors rounded-full flex items-center justify-center shadow-inner">
-               <Target className="w-7 h-7 text-cyan-500 dark:text-cyan-400 animate-pulse" />
-            </div>
-          </div>
-          <span className="text-slate-600 dark:text-slate-300 font-black animate-pulse text-xl tracking-tight">Hệ thống đang mô phỏng dữ liệu và phân tích...</span>
-        </div>
-      )}
+      {/* GỌI COMPONENT ROBOT NẾU ĐANG LOADING */}
+      {isLoadingAi && <RobotLoadingState />}
 
       {aiResult && !isLoadingAi && (
         <div className="group bg-gradient-to-br from-cyan-50/80 via-blue-50/80 to-indigo-50/80 dark:from-slate-800/90 dark:via-slate-900/90 dark:to-indigo-950/90 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-10 border border-white dark:border-slate-700 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden transition-all duration-700">

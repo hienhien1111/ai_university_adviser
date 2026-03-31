@@ -238,15 +238,28 @@ function App() {
   }
 
   const handleAnalyzeAI = async () => {
-    setAiError(''); setAiResult(null); setUniversitiesResult(null); setIsLoadingAi(true);
+    // 1. Xóa dữ liệu cũ và bật trạng thái Loading
+    setAiError(''); 
+    setAiResult(null); 
+    setUniversitiesResult(null); 
+    setIsLoadingAi(true);
+    
+    // 2. CHUYỂN TAB NGAY LẬP TỨC: Đưa người dùng sang Tab AI để xem Robot suy nghĩ
+    setActiveTab('ai'); 
+
+    // 3. Chuẩn bị dữ liệu và gọi API
     const payload = { hoat_dong: hoatDong, tinh_cach: tinhCach, nang_luc: nangLuc, moi_truong: moiTruong };
     try {
       const response = await fetch(`${API_BASE}/analyze-personality`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
       const data = await response.json();
+      
       if (data.status === 'success') {
-        setAiResult(data.data); setActiveTab('ai'); showToast("AI đã phân tích thành công!", "success");
+        setAiResult(data.data); 
+        // Đã setActiveTab('ai') ở trên rồi nên chỗ này không cần nữa, nhưng giữ lại cũng không sao
+        showToast("AI đã phân tích thành công!", "success");
+        
         const newRecord = {
           id: Date.now().toString(), date: new Date().toLocaleString('vi-VN'),
           profile,
@@ -255,9 +268,20 @@ function App() {
         const currentHistory = Array.isArray(history) ? history : [];
         const updatedHistory = [newRecord, ...currentHistory];
         setHistory(updatedHistory); localStorage.setItem('eduGuideHistory', JSON.stringify(updatedHistory));
-      } else { setAiError(data.message); showToast(data.message, "error"); }
-    } catch (error) { setAiError("Lỗi kết nối đến Server AI!"); showToast("Lỗi kết nối đến Server AI!", "error"); } 
-    finally { setIsLoadingAi(false); }
+      } else { 
+        setAiError(data.message); 
+        showToast(data.message, "error"); 
+        // Nếu lỗi, tự động đẩy về lại Tab Input để người dùng sửa dữ liệu
+        setActiveTab('input'); 
+      }
+    } catch (error) { 
+      setAiError("Lỗi kết nối đến Server AI!"); 
+      showToast("Lỗi kết nối đến Server AI!", "error"); 
+      setActiveTab('input'); 
+    } 
+    finally { 
+      setIsLoadingAi(false); 
+    }
   }
 
   const loadHistoryItem = (item) => {
@@ -476,7 +500,7 @@ function App() {
           </div>
 
         {/* FOOTER - BỐ CỤC CHIA CỘT TỐI GIẢN (MINIMALIST COLUMNS) */}
-          <footer className="mt-auto pt-20 pb-12 relative z-10 w-full border-t border-slate-200/60 dark:border-slate-800/60 bg-gradient-to-b from-transparent to-slate-50/50 dark:to-slate-900/30 backdrop-blur-sm transition-colors duration-500">
+          <footer className="mt-auto pt-20 pb-8 relative z-10 w-full border-t border-slate-200/60 dark:border-slate-800/60 bg-gradient-to-b from-transparent to-slate-50/50 dark:to-slate-900/30 backdrop-blur-sm transition-colors duration-500">
             <div className="max-w-6xl mx-auto px-6">
               
               {/* Nút QR Code (Căn giữa phía trên cùng) */}
@@ -507,7 +531,6 @@ function App() {
 
               {/* Lưới danh sách chia cột */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 w-full mb-16 px-4 md:px-0">
-                
                 {/* Cột 1: Thông tin chung */}
                 <div className="flex flex-col">
                   <h4 className="text-sm font-black text-slate-800 dark:text-slate-200 mb-6 flex items-center">
@@ -522,9 +545,7 @@ function App() {
 
                 {/* Cột 2: Frontend */}
                 <div className="flex flex-col">
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6">
-                    Frontend
-                  </h4>
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6">Frontend</h4>
                   <ul className="space-y-4">
                     <li className="text-sm font-medium text-slate-500 dark:text-slate-400">React</li>
                     <li className="text-sm font-medium text-slate-500 dark:text-slate-400">Node.js</li>
@@ -535,9 +556,7 @@ function App() {
 
                 {/* Cột 3: Backend */}
                 <div className="flex flex-col">
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6">
-                    Backend
-                  </h4>
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6">Backend</h4>
                   <ul className="space-y-4">
                     <li className="text-sm font-medium text-slate-500 dark:text-slate-400">Python</li>
                     <li className="text-sm font-medium text-slate-500 dark:text-slate-400">Flask</li>
@@ -547,9 +566,7 @@ function App() {
 
                 {/* Cột 4: Hạ tầng */}
                 <div className="flex flex-col">
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6">
-                    Hạ tầng & Triển khai
-                  </h4>
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6">Hạ tầng & Triển khai</h4>
                   <ul className="space-y-4">
                     <li className="text-sm font-medium text-slate-500 dark:text-slate-400">Vercel</li>
                     <li className="text-sm font-medium text-slate-500 dark:text-slate-400">AWS</li>
@@ -557,12 +574,10 @@ function App() {
                     <li className="text-sm font-medium text-slate-500 dark:text-slate-400">Nginx</li>
                   </ul>
                 </div>
-
               </div>
 
-              {/* Phần thông tin Bản quyền & Nhà phát triển (Dưới cùng) */}
+              {/* Phần thông tin Bản quyền & Nhà phát triển */}
               <div className="w-full pt-8 border-t border-slate-200/60 dark:border-slate-800/60 flex flex-col md:flex-row items-center justify-between gap-4 px-4 md:px-0">
-                
                 {/* Nguồn dữ liệu */}
                 <p className="text-xs font-medium text-slate-400 dark:text-slate-500 text-center md:text-left">
                   Dữ liệu tuyển sinh tham khảo từ <span className="font-bold text-slate-600 dark:text-slate-300">Bộ GD&ĐT</span>.
@@ -571,9 +586,18 @@ function App() {
                 {/* Nhóm phát triển */}
                 <p className="text-xs font-medium text-slate-400 dark:text-slate-500 text-center md:text-right flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
                   <span>Phát triển bởi</span> 
-                  <span className="font-bold text-indigo-600 dark:text-cyan-400"> DHM - Nguyễn Thành Duy - Tô Minh Hiến - Bùi Tuệ Mẫn</span>
+                  <span className="font-bold text-indigo-600 dark:text-cyan-400">Tô Minh Hiến - Nguyễn Thành Duy - Bùi Tuệ Mẫn</span>
                 </p>
-                
+              </div>
+
+              {/* DÒNG LƯU Ý AI (DISCLAIMER) - Chuyên nghiệp và đáng tin cậy */}
+              <div className="w-full mt-6 pt-6 border-t border-slate-200/30 dark:border-slate-800/30 flex justify-center px-4 md:px-0">
+                <p className="text-[10px] sm:text-[11px] font-medium text-slate-400/80 dark:text-slate-500/80 text-center max-w-4xl flex items-start sm:items-center justify-center leading-relaxed">
+                  {/* <AlertCircle className="w-3.5 h-3.5 mr-1.5 shrink-0 mt-0.5 sm:mt-0 opacity-70" /> */}
+                  <span>
+                    <strong className="font-semibold text-slate-500 dark:text-slate-400">Lưu ý:</strong> Các kết quả phân tích và định hướng từ EduGuide AI được tạo ra tự động dựa trên dữ liệu bạn nhập vào. Trí tuệ nhân tạo có thể mắc sai lầm hoặc chưa đánh giá hết toàn diện các khía cạnh. Vui lòng sử dụng kết quả này như một nguồn tham khảo và kết hợp thêm tư vấn từ chuyên gia, thầy cô để có quyết định chính xác nhất.
+                  </span>
+                </p>
               </div>
 
             </div>
