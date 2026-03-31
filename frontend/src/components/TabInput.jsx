@@ -79,7 +79,7 @@ export default function TabInput({
         <div className="pt-8 border-t border-slate-200/50 dark:border-slate-700/50 mt-6">
           <div className="col-span-full">
             <label className="block mb-4 text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center">
-              <Zap className="w-4 h-4 mr-2 text-indigo-500 dark:text-cyan-400"/>Điểm thi từng môn
+              <Zap className="w-4 h-4 mr-2 text-indigo-500 dark:text-cyan-400"/>Điểm thi/dự kiến từng môn
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3.5 bg-slate-50/50 dark:bg-slate-900/40 p-5 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-inner">
               {renderScoreInputs()}
