@@ -263,6 +263,8 @@ export default function App() {
               subjectNotice={subjectNotice}
             />
           </div>
+        </div>
+      )}
 
           {/* Right column — results */}
           <div className="lg:col-span-7">
@@ -300,5 +302,5 @@ export default function App() {
         </p>
       </footer>
     </div>
-  )
+  );
 }
