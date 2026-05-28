@@ -1,4 +1,4 @@
-# 🎓 AI University Adviser
+# AI University Adviser
 
 <div align="center">
 
@@ -17,20 +17,20 @@
 
 ---
 
-## ✨ Tính năng
+## ính năng
 
 | | Tính năng | Mô tả |
 |---|---|---|
-| 🧠 | **AI Personality Analysis** | Phân tích văn bản tự do qua Gemini 2.5 Flash (kỹ thuật HyDE) |
-| 🔍 | **Vector Search (RAG)** | Tìm ngành phù hợp bằng embedding tiếng Việt + cosine similarity trên pgvector |
-| 🎯 | **Explainable AI** | Sinh lời khuyên chi tiết giải thích *tại sao* từng ngành phù hợp |
-| 🏫 | **University Matching** | Lọc trường theo ngành AI đề xuất, điểm thi và khu vực địa lý |
-| 📊 | **Subject Group Detection** | Tự động xác định khối thi hợp lệ từ môn học người dùng chọn |
-| 🌙 | **Dark Mode UI** | Giao diện glassmorphism hiện đại, responsive |
+| | **AI Personality Analysis** | Phân tích văn bản tự do qua Gemini 2.5 Flash (kỹ thuật HyDE) |
+| | **Vector Search (RAG)** | Tìm ngành phù hợp bằng embedding tiếng Việt + cosine similarity trên pgvector |
+| | **Explainable AI** | Sinh lời khuyên chi tiết giải thích *tại sao* từng ngành phù hợp |
+| | **University Matching** | Lọc trường theo ngành AI đề xuất, điểm thi và khu vực địa lý |
+| | **Subject Group Detection** | Tự động xác định khối thi hợp lệ từ môn học người dùng chọn |
+| | **Dark Mode UI** | Giao diện glassmorphism hiện đại, responsive |
 
 ---
 
-## 🏗️ Kiến trúc
+## Kiến trúc
 
 ```
 ┌──────────────────────── FRONTEND ──────────────────────────┐
@@ -61,7 +61,7 @@
 
 ---
 
-## 🚀 Cài đặt
+## Cài đặt
 
 ### Yêu cầu
 
@@ -92,7 +92,7 @@ DB_NAME=postgres
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
-> 🔑 Lấy Gemini API Key tại [Google AI Studio](https://aistudio.google.com/app/apikey)
+> Lấy Gemini API Key tại [Google AI Studio](https://aistudio.google.com/app/apikey)
 
 ### 3. Khởi động Backend
 
@@ -109,7 +109,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-> ⚠️ **Lần đầu khởi động** sẽ tải model `bkai-foundation-models/vietnamese-bi-encoder` từ HuggingFace (~500 MB). Vui lòng chờ.
+> **Lần đầu khởi động** sẽ tải model `bkai-foundation-models/vietnamese-bi-encoder` từ HuggingFace (~500 MB). Vui lòng chờ.
 
 Backend chạy tại: **`http://127.0.0.1:5000`**
 
@@ -225,7 +225,7 @@ Tìm trường theo ngành AI đề xuất và điểm thi.
 
 ---
 
-## 📁 Cấu trúc Project
+## Cấu trúc Project
 
 ```
 ai_university_adviser/
@@ -261,7 +261,7 @@ ai_university_adviser/
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 ```sql
 universities        -- Thông tin trường ĐH (mã, tên, vùng)
@@ -275,7 +275,7 @@ major_embeddings    -- Vector 768 chiều (pgvector) cho từng ngành
 
 ---
 
-## 🤖 RAG Pipeline
+## RAG Pipeline
 
 ```
 Học sinh nhập văn bản tự do
@@ -303,7 +303,7 @@ Học sinh nhập văn bản tự do
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Công nghệ |
 |---|---|
@@ -317,7 +317,7 @@ Học sinh nhập văn bản tự do
 
 ---
 
-## 👥 Tác giả
+## Tác giả
 
 Được phát triển bởi nhóm sinh viên:
 
